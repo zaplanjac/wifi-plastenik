@@ -1014,17 +1014,17 @@ function App() {
             {/* Sensor Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
               <SensorCard
-                title="Температура у Пластенику"
-                value={sensorData.temperature}
-                unit="°C"
-                icon={<Thermometer className="w-5 h-5" />}
-                status="good"
-              />
-              <SensorCard
                 title="Спољашња Температура"
                 value={sensorData.externalTemperature}
                 unit="°C"
                 icon={<ThermometerSun className="w-5 h-5" />}
+                status="good"
+              />
+              <SensorCard
+                title="Температура у Пластенику"
+                value={sensorData.temperature}
+                unit="°C"
+                icon={<Thermometer className="w-5 h-5" />}
                 status="good"
               />
               <SensorCard
