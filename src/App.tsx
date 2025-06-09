@@ -311,6 +311,66 @@ const ValveControl: React.FC<{
   );
 };
 
+const SystemStatus: React.FC<{ data: SensorData }> = ({ data }) => {
+  return (
+    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+      <div className="flex items-center gap-2 mb-4">
+        <Settings className="w-5 h-5 text-white" />
+        <span className="text-white font-semibold">Статус Система</span>
+      </div>
+      
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {data.wifiConnected ? <Wifi className="w-4 h-4 text-green-400" /> : <WifiOff className="w-4 h-4 text-red-400" />}
+            <span className="text-white/80">WiFi Веза</span>
+          </div>
+          <span className={`text-sm ${data.wifiConnected ? 'text-green-400' : 'text-red-400'}`}>
+            {data.wifiConnected ? 'Повезано' : 'Није повезано'}
+          </span>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Zap className={`w-4 h-4 ${data.mqttConnected ? 'text-green-400' : 'text-red-400'}`} />
+            <span className="text-white/80">MQTT Брокер</span>
+          </div>
+          <span className={`text-sm ${data.mqttConnected ? 'text-green-400' : 'text-red-400'}`}>
+            {data.mqttConnected ? 'Повезано' : 'Није повезано'}
+          </span>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Power className={`w-4 h-4 ${data.systemActive ? 'text-green-400' : 'text-gray-400'}`} />
+            <span className="text-white/80">Статус Система</span>
+          </div>
+          <span className={`text-sm ${data.systemActive ? 'text-green-400' : 'text-gray-400'}`}>
+            {data.systemActive ? 'Активан' : 'У приправности'}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Target className={`w-4 h-4 ${data.autoMode ? 'text-blue-400' : 'text-gray-400'}`} />
+            <span className="text-white/80">Режим Рада</span>
+          </div>
+          <span className={`text-sm ${data.autoMode ? 'text-blue-400' : 'text-gray-400'}`}>
+            {data.autoMode ? 'Аутоматски' : 'Ручни'}
+          </span>
+        </div>
+        
+        <div className="pt-2 border-t border-white/20">
+          <div className="flex items-center gap-2 text-white/60 text-xs">
+            <Clock className="w-3 h-3" />
+            <span>Последње ажурирање: {new Date().toLocaleTimeString()}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AutomaticControls: React.FC<{ 
   data: SensorData; 
   onTargetChange: (temp: number) => void;
@@ -371,6 +431,8 @@ const AutomaticControls: React.FC<{
         onScheduleUpdate={onScheduleUpdate}
         onScheduleDelete={onScheduleDelete}
       />
+
+      <SystemStatus data={data} />
       
       <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
         <div className="flex items-center gap-2 mb-4">
@@ -459,66 +521,6 @@ const ManualControls: React.FC<{
           <div className="flex items-start gap-2">
             <div className="w-2 h-2 bg-red-400 rounded-full mt-1.5 flex-shrink-0"></div>
             <span>Висока брзина ветра ({'>'}{data.windSpeed.toFixed(1)} km/h) може утицати на систем</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const SystemStatus: React.FC<{ data: SensorData }> = ({ data }) => {
-  return (
-    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-      <div className="flex items-center gap-2 mb-4">
-        <Settings className="w-5 h-5 text-white" />
-        <span className="text-white font-semibold">Статус Система</span>
-      </div>
-      
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {data.wifiConnected ? <Wifi className="w-4 h-4 text-green-400" /> : <WifiOff className="w-4 h-4 text-red-400" />}
-            <span className="text-white/80">WiFi Веза</span>
-          </div>
-          <span className={`text-sm ${data.wifiConnected ? 'text-green-400' : 'text-red-400'}`}>
-            {data.wifiConnected ? 'Повезано' : 'Није повезано'}
-          </span>
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Zap className={`w-4 h-4 ${data.mqttConnected ? 'text-green-400' : 'text-red-400'}`} />
-            <span className="text-white/80">MQTT Брокер</span>
-          </div>
-          <span className={`text-sm ${data.mqttConnected ? 'text-green-400' : 'text-red-400'}`}>
-            {data.mqttConnected ? 'Повезано' : 'Није повезано'}
-          </span>
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Power className={`w-4 h-4 ${data.systemActive ? 'text-green-400' : 'text-gray-400'}`} />
-            <span className="text-white/80">Статус Система</span>
-          </div>
-          <span className={`text-sm ${data.systemActive ? 'text-green-400' : 'text-gray-400'}`}>
-            {data.systemActive ? 'Активан' : 'У приправности'}
-          </span>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Target className={`w-4 h-4 ${data.autoMode ? 'text-blue-400' : 'text-gray-400'}`} />
-            <span className="text-white/80">Режим Рада</span>
-          </div>
-          <span className={`text-sm ${data.autoMode ? 'text-blue-400' : 'text-gray-400'}`}>
-            {data.autoMode ? 'Аутоматски' : 'Ручни'}
-          </span>
-        </div>
-        
-        <div className="pt-2 border-t border-white/20">
-          <div className="flex items-center gap-2 text-white/60 text-xs">
-            <Clock className="w-3 h-3" />
-            <span>Последње ажурирање: {new Date().toLocaleTimeString()}</span>
           </div>
         </div>
       </div>
@@ -821,32 +823,26 @@ function App() {
             </div>
 
             {/* Mode-specific Controls */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
-              <div className="lg:col-span-3">
-                {operatingMode === 'automatic' ? (
-                  <AutomaticControls 
-                    data={sensorData} 
-                    onTargetChange={handleTargetTemperatureChange}
-                    onIncubatorTargetChange={handleIncubatorTargetTemperatureChange}
-                    onFanSpeedChange={handleFanSpeedChange}
-                    schedules={irrigationSchedules}
-                    onScheduleAdd={handleScheduleAdd}
-                    onScheduleUpdate={handleScheduleUpdate}
-                    onScheduleDelete={handleScheduleDelete}
-                    soilMoistureSettings={soilMoistureSettings}
-                    onSoilMoistureSettingsChange={setSoilMoistureSettings}
-                  />
-                ) : (
-                  <ManualControls 
-                    data={sensorData} 
-                    onValveToggle={toggleValve}
-                  />
-                )}
-              </div>
-              
-              <div className="lg:col-span-1">
-                <SystemStatus data={sensorData} />
-              </div>
+            <div className="mb-6">
+              {operatingMode === 'automatic' ? (
+                <AutomaticControls 
+                  data={sensorData} 
+                  onTargetChange={handleTargetTemperatureChange}
+                  onIncubatorTargetChange={handleIncubatorTargetTemperatureChange}
+                  onFanSpeedChange={handleFanSpeedChange}
+                  schedules={irrigationSchedules}
+                  onScheduleAdd={handleScheduleAdd}
+                  onScheduleUpdate={handleScheduleUpdate}
+                  onScheduleDelete={handleScheduleDelete}
+                  soilMoistureSettings={soilMoistureSettings}
+                  onSoilMoistureSettingsChange={setSoilMoistureSettings}
+                />
+              ) : (
+                <ManualControls 
+                  data={sensorData} 
+                  onValveToggle={toggleValve}
+                />
+              )}
             </div>
 
             {/* Footer */}
