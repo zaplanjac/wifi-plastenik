@@ -17,7 +17,8 @@ import {
   Wind,
   Sun,
   Leaf,
-  ThermometerSun
+  ThermometerSun,
+  Fan
 } from 'lucide-react';
 
 interface SensorData {
@@ -33,6 +34,7 @@ interface SensorData {
   mqttConnected: boolean;
   systemActive: boolean;
   targetTemperature: number;
+  fanSpeed: number;
   autoMode: boolean;
 }
 
@@ -187,6 +189,75 @@ const TemperatureControl: React.FC<{
   );
 };
 
+const FanSpeedControl: React.FC<{ 
+  fanSpeed: number; 
+  onFanSpeedChange: (speed: number) => void;
+}> = ({ fanSpeed, onFanSpeedChange }) => {
+  
+  const getFanStatus = () => {
+    if (fanSpeed === 0) return { status: 'Искључен', color: 'text-gray-400' };
+    if (fanSpeed <= 30) return { status: 'Тихо', color: 'text-green-400' };
+    if (fanSpeed <= 70) return { status: 'Умерено', color: 'text-yellow-400' };
+    return { status: 'Брзо', color: 'text-red-400' };
+  };
+
+  const fanStatus = getFanStatus();
+
+  return (
+    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+      <div className="flex items-center gap-2 mb-4">
+        <Fan className="w-5 h-5 text-white" />
+        <span className="text-white font-semibold">Контрола Вентилатора</span>
+      </div>
+
+      <div className="space-y-4">
+        <div className="text-center">
+          <div className="text-sm text-white/70 mb-1">Брзина</div>
+          <div className="text-3xl font-bold text-white">{fanSpeed}%</div>
+          <span className={`text-sm font-medium ${fanStatus.color}`}>
+            {fanStatus.status}
+          </span>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm text-white/70">
+            <span>Брзина вентилатора</span>
+            <span>{fanSpeed}%</span>
+          </div>
+          <div className="relative">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={fanSpeed}
+              onChange={(e) => onFanSpeedChange(parseInt(e.target.value))}
+              className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
+              style={{
+                background: `linear-gradient(to right, #10B981 0%, #10B981 ${fanSpeed}%, rgba(255,255,255,0.2) ${fanSpeed}%, rgba(255,255,255,0.2) 100%)`
+              }}
+            />
+            <div className="flex justify-between text-xs text-white/50 mt-1">
+              <span>0%</span>
+              <span>50%</span>
+              <span>100%</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+          <div className="text-xs text-green-200">
+            <div className="font-medium mb-1">Аутоматска регулација:</div>
+            <div>• Повећава се при високој температури</div>
+            <div>• Смањује се при ниској температури</div>
+            <div>• Искључује се при јаком ветру</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ValveControl: React.FC<{ 
   valve: string; 
   active: boolean; 
@@ -224,7 +295,8 @@ const ValveControl: React.FC<{
 const AutomaticControls: React.FC<{ 
   data: SensorData; 
   onTargetChange: (temp: number) => void;
-}> = ({ data, onTargetChange }) => {
+  onFanSpeedChange: (speed: number) => void;
+}> = ({ data, onTargetChange, onFanSpeedChange }) => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -234,33 +306,43 @@ const AutomaticControls: React.FC<{
           onTargetChange={onTargetChange}
         />
         
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-          <div className="flex items-center gap-2 mb-4">
-            <Zap className="w-5 h-5 text-white" />
-            <span className="text-white font-semibold">Аутоматске Функције</span>
-          </div>
-          <div className="space-y-4">
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-              <div className="text-sm text-blue-200">
-                <div className="font-medium mb-2">Активне аутоматске контроле:</div>
-                <div className="space-y-1 text-xs">
-                  <div>• Температурна регулација: {data.targetTemperature}°C ± 1°C</div>
-                  <div>• Влажност земљишта: Аутоматско наводњавање</div>
-                  <div>• Ветар: Заштита при јачини &gt; 15 km/h</div>
-                  <div>• CO₂: Оптимизација за раст биљака</div>
-                </div>
+        <FanSpeedControl
+          fanSpeed={data.fanSpeed}
+          onFanSpeedChange={onFanSpeedChange}
+        />
+      </div>
+      
+      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+        <div className="flex items-center gap-2 mb-4">
+          <Zap className="w-5 h-5 text-white" />
+          <span className="text-white font-semibold">Аутоматске Функције</span>
+        </div>
+        <div className="space-y-4">
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+            <div className="text-sm text-blue-200">
+              <div className="font-medium mb-2">Активне аутоматске контроле:</div>
+              <div className="space-y-1 text-xs">
+                <div>• Температурна регулација: {data.targetTemperature}°C ± 1°C</div>
+                <div>• Вентилатор: {data.fanSpeed}% брзине</div>
+                <div>• Влажност земљишта: Аутоматско наводњавање</div>
+                <div>• Ветар: Заштита при јачини &gt; 15 km/h</div>
+                <div>• CO₂: Оптимизација за раст биљака</div>
               </div>
             </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div className="text-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                <div className="text-green-300 font-medium">Вентили</div>
-                <div className="text-xs text-green-200">Аутоматски</div>
-              </div>
-              <div className="text-center p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                <div className="text-blue-300 font-medium">Наводњавање</div>
-                <div className="text-xs text-blue-200">По потреби</div>
-              </div>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-3">
+            <div className="text-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+              <div className="text-green-300 font-medium">Вентили</div>
+              <div className="text-xs text-green-200">Аутоматски</div>
+            </div>
+            <div className="text-center p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+              <div className="text-blue-300 font-medium">Наводњавање</div>
+              <div className="text-xs text-blue-200">По потреби</div>
+            </div>
+            <div className="text-center p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
+              <div className="text-purple-300 font-medium">Вентилатор</div>
+              <div className="text-xs text-purple-200">{data.fanSpeed}%</div>
             </div>
           </div>
         </div>
@@ -393,6 +475,7 @@ function App() {
     mqttConnected: true,
     systemActive: true,
     targetTemperature: 24.0,
+    fanSpeed: 45,
     autoMode: false
   });
 
@@ -411,7 +494,9 @@ function App() {
       
       setSensorData(prev => {
         let newValves = { ...prev.valves };
+        let newFanSpeed = prev.fanSpeed;
         
+        // Temperature-based valve control
         if (tempDiff > 2) {
           newValves.valve1 = true;
           newValves.valve2 = true;
@@ -420,13 +505,32 @@ function App() {
           newValves.valve2 = false;
         }
         
+        // Automatic fan speed control based on temperature difference
+        if (tempDiff > 3) {
+          newFanSpeed = Math.min(100, 80);
+        } else if (tempDiff > 1) {
+          newFanSpeed = Math.min(100, 60);
+        } else if (tempDiff < -3) {
+          newFanSpeed = Math.max(0, 20);
+        } else if (tempDiff < -1) {
+          newFanSpeed = Math.max(0, 30);
+        } else {
+          newFanSpeed = 45; // Default moderate speed
+        }
+        
+        // Reduce fan speed in high wind conditions
+        if (prev.windSpeed > 15) {
+          newFanSpeed = Math.min(newFanSpeed, 20);
+        }
+        
         return {
           ...prev,
-          valves: newValves
+          valves: newValves,
+          fanSpeed: newFanSpeed
         };
       });
     }
-  }, [sensorData.temperature, sensorData.targetTemperature, sensorData.autoMode]);
+  }, [sensorData.temperature, sensorData.targetTemperature, sensorData.windSpeed, sensorData.autoMode]);
 
   // Real-time data simulation
   useEffect(() => {
@@ -462,6 +566,13 @@ function App() {
     setSensorData(prev => ({
       ...prev,
       targetTemperature: temp
+    }));
+  };
+
+  const handleFanSpeedChange = (speed: number) => {
+    setSensorData(prev => ({
+      ...prev,
+      fanSpeed: speed
     }));
   };
 
@@ -504,10 +615,17 @@ function App() {
         {/* Sensor Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
           <SensorCard
-            title="Температура"
+            title="Температура у Пластенику"
             value={sensorData.temperature}
             unit="°C"
             icon={<Thermometer className="w-5 h-5" />}
+            status="good"
+          />
+          <SensorCard
+            title="Спољашња Температура"
+            value={sensorData.externalTemperature}
+            unit="°C"
+            icon={<ThermometerSun className="w-5 h-5" />}
             status="good"
           />
           <SensorCard
@@ -545,13 +663,6 @@ function App() {
             icon={<Leaf className="w-5 h-5" />}
             status={getSensorStatus('co2', sensorData.co2Saturation)}
           />
-          <SensorCard
-            title="Спољашња Темп."
-            value={sensorData.externalTemperature}
-            unit="°C"
-            icon={<ThermometerSun className="w-5 h-5" />}
-            status="good"
-          />
         </div>
 
         {/* Mode-specific Controls */}
@@ -561,6 +672,7 @@ function App() {
               <AutomaticControls 
                 data={sensorData} 
                 onTargetChange={handleTargetTemperatureChange}
+                onFanSpeedChange={handleFanSpeedChange}
               />
             ) : (
               <ManualControls 
@@ -577,7 +689,7 @@ function App() {
 
         {/* Footer */}
         <div className="text-center text-white/50 text-sm">
-          <p>ESP32 Систем за Наводњавање в3.0 | WebSocket: Порт 81 | MQTT: localhost:1883</p>
+          <p>ESP32 Систем за Наводњавање в3.1 | WebSocket: Порт 81 | MQTT: localhost:1883</p>
         </div>
       </div>
 
