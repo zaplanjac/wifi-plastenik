@@ -8,6 +8,8 @@ import {
   BookOpen,
   Home
 } from 'lucide-react';
+import RainAnimation from './RainAnimation';
+import SocialShareButton from './SocialShareButton';
 
 type CurrentPage = 'dashboard' | 'calendar' | 'wifi' | 'instructions';
 
@@ -65,34 +67,66 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ currentPage, onPageChange
 
   return (
     <>
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-xl blur-lg opacity-75"></div>
-            <div className="relative bg-gradient-to-r from-blue-500 to-cyan-500 p-2 rounded-xl">
-              <Droplets className="w-8 h-8 text-white" />
+      {/* Enhanced Header with Rain Animation */}
+      <div className="relative mb-8 overflow-hidden">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-cyan-500/20 to-blue-600/20 rounded-3xl blur-xl"></div>
+        
+        {/* Main header container */}
+        <div className="relative bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10 shadow-2xl">
+          {/* Rain Animation */}
+          <RainAnimation />
+          
+          {/* Header content */}
+          <div className="relative z-10 flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                {/* Animated water drop icon with glow */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-xl blur-lg opacity-75 animate-pulse"></div>
+                <div className="relative bg-gradient-to-r from-blue-500 to-cyan-500 p-3 rounded-xl shadow-lg">
+                  <Droplets className="w-10 h-10 text-white animate-bounce" />
+                </div>
+                
+                {/* Water ripple effect */}
+                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-8 h-2 bg-blue-400/30 rounded-full animate-ping"></div>
+              </div>
+              
+              <div className="space-y-1">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-blue-100 to-cyan-200 bg-clip-text text-transparent">
+                  МОЈА БАШТА
+                </h1>
+                <p className="text-blue-200/90 text-lg font-medium">
+                  Паметан систем за наводњавање
+                </p>
+                <div className="flex items-center gap-2 text-blue-300/70 text-sm">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span>ESP32 • Реално време • Аутоматизација</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              {/* Social Share Button */}
+              <SocialShareButton />
+              
+              {/* Mobile Hamburger Button */}
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="lg:hidden bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105"
+              >
+                {isOpen ? (
+                  <X className="w-6 h-6 text-white" />
+                ) : (
+                  <Menu className="w-6 h-6 text-white" />
+                )}
+              </button>
             </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-              МОЈА БАШТА
-            </h1>
-            <p className="text-blue-200/80 text-sm">Паметан систем за наводњавање</p>
-          </div>
+          
+          {/* Decorative elements */}
+          <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-blue-400/10 to-cyan-400/10 rounded-full blur-xl"></div>
+          <div className="absolute bottom-4 left-4 w-16 h-16 bg-gradient-to-br from-cyan-400/10 to-blue-400/10 rounded-full blur-xl"></div>
         </div>
-        
-        {/* Mobile Hamburger Button */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="lg:hidden bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 hover:bg-white/20 transition-all duration-300"
-        >
-          {isOpen ? (
-            <X className="w-6 h-6 text-white" />
-          ) : (
-            <Menu className="w-6 h-6 text-white" />
-          )}
-        </button>
       </div>
 
       {/* Mobile Menu Overlay */}
@@ -125,11 +159,17 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ currentPage, onPageChange
                 </button>
               ))}
             </nav>
+            
+            {/* Social sharing in mobile menu */}
+            <div className="mt-8 pt-6 border-t border-white/20">
+              <div className="text-white/70 text-sm mb-3">Подели систем:</div>
+              <SocialShareButton />
+            </div>
           </div>
         </div>
       )}
 
-      {/* Desktop Navigation - Redesigned */}
+      {/* Desktop Navigation - Enhanced */}
       <div className="hidden lg:flex justify-center mb-8">
         <div className="relative">
           {/* Background glow effect */}
