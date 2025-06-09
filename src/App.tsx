@@ -18,8 +18,16 @@ import {
   Sun,
   Leaf,
   ThermometerSun,
-  Fan
+  Fan,
+  ChevronUp,
+  Calendar,
+  Plus,
+  Edit,
+  Trash2,
+  Save,
+  X
 } from 'lucide-react';
+import CalendarPage from './components/CalendarPage';
 
 interface SensorData {
   temperature: number;
@@ -38,7 +46,17 @@ interface SensorData {
   autoMode: boolean;
 }
 
+interface IrrigationSchedule {
+  id: string;
+  name: string;
+  startTime: string;
+  duration: number; // in minutes
+  days: string[]; // ['monday', 'tuesday', etc.]
+  active: boolean;
+}
+
 type OperatingMode = 'manual' | 'automatic';
+type CurrentPage = 'dashboard' | 'calendar';
 
 const ModeSwitch: React.FC<{ 
   mode: OperatingMode; 
@@ -258,6 +276,204 @@ const FanSpeedControl: React.FC<{
   );
 };
 
+const IrrigationScheduleManager: React.FC<{
+  schedules: IrrigationSchedule[];
+  onScheduleAdd: (schedule: Omit<IrrigationSchedule, 'id'>) => void;
+  onScheduleUpdate: (id: string, schedule: Partial<IrrigationSchedule>) => void;
+  onScheduleDelete: (id: string) => void;
+}> = ({ schedules, onScheduleAdd, onScheduleUpdate, onScheduleDelete }) => {
+  const [isAddingSchedule, setIsAddingSchedule] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState<string | null>(null);
+  const [newSchedule, setNewSchedule] = useState({
+    name: '',
+    startTime: '06:00',
+    duration: 30,
+    days: [] as string[],
+    active: true
+  });
+
+  const daysOfWeek = [
+    { key: 'monday', label: 'Понедељак' },
+    { key: 'tuesday', label: 'Уторак' },
+    { key: 'wednesday', label: 'Среда' },
+    { key: 'thursday', label: 'Четвртак' },
+    { key: 'friday', label: 'Петак' },
+    { key: 'saturday', label: 'Субота' },
+    { key: 'sunday', label: 'Недеља' }
+  ];
+
+  const handleAddSchedule = () => {
+    if (newSchedule.name && newSchedule.days.length > 0) {
+      onScheduleAdd(newSchedule);
+      setNewSchedule({
+        name: '',
+        startTime: '06:00',
+        duration: 30,
+        days: [],
+        active: true
+      });
+      setIsAddingSchedule(false);
+    }
+  };
+
+  const toggleDay = (day: string) => {
+    setNewSchedule(prev => ({
+      ...prev,
+      days: prev.days.includes(day) 
+        ? prev.days.filter(d => d !== day)
+        : [...prev.days, day]
+    }));
+  };
+
+  const formatScheduleDays = (days: string[]) => {
+    const dayLabels = days.map(day => 
+      daysOfWeek.find(d => d.key === day)?.label || day
+    );
+    return dayLabels.join(', ');
+  };
+
+  return (
+    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Clock className="w-5 h-5 text-white" />
+          <span className="text-white font-semibold">Управљање Распоредом Наводњавања</span>
+        </div>
+        <button
+          onClick={() => setIsAddingSchedule(true)}
+          className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Додај Распред
+        </button>
+      </div>
+
+      {/* Add New Schedule Form */}
+      {isAddingSchedule && (
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-4">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-white/70 text-sm mb-2">Назив распореда</label>
+              <input
+                type="text"
+                value={newSchedule.name}
+                onChange={(e) => setNewSchedule(prev => ({ ...prev, name: e.target.value }))}
+                className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/50"
+                placeholder="нпр. Јутарње заливање"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-white/70 text-sm mb-2">Време почетка</label>
+                <input
+                  type="time"
+                  value={newSchedule.startTime}
+                  onChange={(e) => setNewSchedule(prev => ({ ...prev, startTime: e.target.value }))}
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-white/70 text-sm mb-2">Трајање (минути)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="120"
+                  value={newSchedule.duration}
+                  onChange={(e) => setNewSchedule(prev => ({ ...prev, duration: parseInt(e.target.value) }))}
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-white/70 text-sm mb-2">Дани у недељи</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {daysOfWeek.map(day => (
+                  <button
+                    key={day.key}
+                    onClick={() => toggleDay(day.key)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      newSchedule.days.includes(day.key)
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-white/10 text-white/70 hover:bg-white/20'
+                    }`}
+                  >
+                    {day.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={handleAddSchedule}
+                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                <Save className="w-4 h-4" />
+                Сачувај
+              </button>
+              <button
+                onClick={() => setIsAddingSchedule(false)}
+                className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
+                Откажи
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Existing Schedules */}
+      <div className="space-y-3">
+        {schedules.length === 0 ? (
+          <div className="text-center text-white/60 py-8">
+            <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>Нема дефинисаних распореда наводњавања</p>
+            <p className="text-sm">Додајте нови распоред да бисте аутоматизовали заливање</p>
+          </div>
+        ) : (
+          schedules.map(schedule => (
+            <div key={schedule.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-white font-medium">{schedule.name}</h3>
+                    <div className={`w-2 h-2 rounded-full ${schedule.active ? 'bg-green-400' : 'bg-gray-400'}`} />
+                  </div>
+                  <div className="text-sm text-white/70 space-y-1">
+                    <div>Време: {schedule.startTime} | Трајање: {schedule.duration} мин</div>
+                    <div>Дани: {formatScheduleDays(schedule.days)}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onScheduleUpdate(schedule.id, { active: !schedule.active })}
+                    className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                      schedule.active
+                        ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30'
+                        : 'bg-gray-500/20 text-gray-300 hover:bg-gray-500/30'
+                    }`}
+                  >
+                    {schedule.active ? 'Активан' : 'Неактиван'}
+                  </button>
+                  <button
+                    onClick={() => onScheduleDelete(schedule.id)}
+                    className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
 const ValveControl: React.FC<{ 
   valve: string; 
   active: boolean; 
@@ -296,7 +512,11 @@ const AutomaticControls: React.FC<{
   data: SensorData; 
   onTargetChange: (temp: number) => void;
   onFanSpeedChange: (speed: number) => void;
-}> = ({ data, onTargetChange, onFanSpeedChange }) => {
+  schedules: IrrigationSchedule[];
+  onScheduleAdd: (schedule: Omit<IrrigationSchedule, 'id'>) => void;
+  onScheduleUpdate: (id: string, schedule: Partial<IrrigationSchedule>) => void;
+  onScheduleDelete: (id: string) => void;
+}> = ({ data, onTargetChange, onFanSpeedChange, schedules, onScheduleAdd, onScheduleUpdate, onScheduleDelete }) => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -311,6 +531,13 @@ const AutomaticControls: React.FC<{
           onFanSpeedChange={onFanSpeedChange}
         />
       </div>
+
+      <IrrigationScheduleManager
+        schedules={schedules}
+        onScheduleAdd={onScheduleAdd}
+        onScheduleUpdate={onScheduleUpdate}
+        onScheduleDelete={onScheduleDelete}
+      />
       
       <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
         <div className="flex items-center gap-2 mb-4">
@@ -325,8 +552,9 @@ const AutomaticControls: React.FC<{
                 <div>• Температурна регулација: {data.targetTemperature}°C ± 1°C</div>
                 <div>• Вентилатор: {data.fanSpeed}% брзине</div>
                 <div>• Влажност земљишта: Аутоматско наводњавање</div>
-                <div>• Ветар: Заштита при јачини &gt; 15 km/h</div>
+                <div>• Ветар: Заштита при јачини > 15 km/h</div>
                 <div>• CO₂: Оптимизација за раст биљака</div>
+                <div>• Распоред: {schedules.filter(s => s.active).length} активних распореда</div>
               </div>
             </div>
           </div>
@@ -338,7 +566,7 @@ const AutomaticControls: React.FC<{
             </div>
             <div className="text-center p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
               <div className="text-blue-300 font-medium">Наводњавање</div>
-              <div className="text-xs text-blue-200">По потреби</div>
+              <div className="text-xs text-blue-200">По распореду</div>
             </div>
             <div className="text-center p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
               <div className="text-purple-300 font-medium">Вентилатор</div>
@@ -392,7 +620,7 @@ const ManualControls: React.FC<{
           </div>
           <div className="flex items-start gap-2">
             <div className="w-2 h-2 bg-red-400 rounded-full mt-1.5 flex-shrink-0"></div>
-            <span>Висока брзина ветра (&gt;{data.windSpeed.toFixed(1)} km/h) може утицати на систем</span>
+            <span>Висока брзина ветра (>{data.windSpeed.toFixed(1)} km/h) може утицати на систем</span>
           </div>
         </div>
       </div>
@@ -460,8 +688,99 @@ const SystemStatus: React.FC<{ data: SensorData }> = ({ data }) => {
   );
 };
 
+const BackToTopButton: React.FC = () => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const toggleVisibility = () => {
+      if (window.pageYOffset > 300) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
+
+    window.addEventListener('scroll', toggleVisibility);
+    return () => window.removeEventListener('scroll', toggleVisibility);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  return (
+    <button
+      onClick={scrollToTop}
+      className={`fixed bottom-6 right-6 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-lg transition-all duration-300 z-50 ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
+      }`}
+    >
+      <ChevronUp className="w-6 h-6" />
+    </button>
+  );
+};
+
+const Navigation: React.FC<{
+  currentPage: CurrentPage;
+  onPageChange: (page: CurrentPage) => void;
+}> = ({ currentPage, onPageChange }) => {
+  return (
+    <div className="flex justify-center mb-8">
+      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/20">
+        <div className="flex gap-2">
+          <button
+            onClick={() => onPageChange('dashboard')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+              currentPage === 'dashboard'
+                ? 'bg-white text-blue-900 shadow-lg'
+                : 'text-white hover:bg-white/10'
+            }`}
+          >
+            <Droplets className="w-5 h-5" />
+            Контролна Табла
+          </button>
+          <button
+            onClick={() => onPageChange('calendar')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+              currentPage === 'calendar'
+                ? 'bg-white text-blue-900 shadow-lg'
+                : 'text-white hover:bg-white/10'
+            }`}
+          >
+            <Calendar className="w-5 h-5" />
+            Календар
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function App() {
+  const [currentPage, setCurrentPage] = useState<CurrentPage>('dashboard');
   const [operatingMode, setOperatingMode] = useState<OperatingMode>('manual');
+  const [irrigationSchedules, setIrrigationSchedules] = useState<IrrigationSchedule[]>([
+    {
+      id: '1',
+      name: 'Јутарње заливање',
+      startTime: '06:00',
+      duration: 30,
+      days: ['monday', 'wednesday', 'friday'],
+      active: true
+    },
+    {
+      id: '2',
+      name: 'Вечерње заливање',
+      startTime: '18:00',
+      duration: 20,
+      days: ['tuesday', 'thursday', 'saturday'],
+      active: true
+    }
+  ]);
+  
   const [sensorData, setSensorData] = useState<SensorData>({
     temperature: 22.5,
     pressure: 1.2,
@@ -576,6 +895,26 @@ function App() {
     }));
   };
 
+  const handleScheduleAdd = (schedule: Omit<IrrigationSchedule, 'id'>) => {
+    const newSchedule: IrrigationSchedule = {
+      ...schedule,
+      id: Date.now().toString()
+    };
+    setIrrigationSchedules(prev => [...prev, newSchedule]);
+  };
+
+  const handleScheduleUpdate = (id: string, updates: Partial<IrrigationSchedule>) => {
+    setIrrigationSchedules(prev => 
+      prev.map(schedule => 
+        schedule.id === id ? { ...schedule, ...updates } : schedule
+      )
+    );
+  };
+
+  const handleScheduleDelete = (id: string) => {
+    setIrrigationSchedules(prev => prev.filter(schedule => schedule.id !== id));
+  };
+
   const getSensorStatus = (type: string, value: number) => {
     switch (type) {
       case 'wind':
@@ -597,6 +936,32 @@ function App() {
     }
   };
 
+  if (currentPage === 'calendar') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-800 p-4">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <Leaf className="w-8 h-8 text-white" />
+              <h1 className="text-3xl font-bold text-white">МОЈА БАШТА</h1>
+            </div>
+            <p className="text-white/70">Календар Биљака и Активности</p>
+          </div>
+
+          {/* Navigation */}
+          <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
+
+          {/* Calendar Page */}
+          <CalendarPage />
+
+          {/* Back to Top Button */}
+          <BackToTopButton />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-800 p-4">
       <div className="max-w-7xl mx-auto">
@@ -604,10 +969,13 @@ function App() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-2">
             <Droplets className="w-8 h-8 text-white" />
-            <h1 className="text-3xl font-bold text-white">ESP32 Систем за Наводњавање</h1>
+            <h1 className="text-3xl font-bold text-white">МОЈА БАШТА</h1>
           </div>
           <p className="text-white/70">Напредна Контролна Табла за Климу и Наводњавање</p>
         </div>
+
+        {/* Navigation */}
+        <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
 
         {/* Mode Switch */}
         <ModeSwitch mode={operatingMode} onModeChange={setOperatingMode} />
@@ -629,7 +997,7 @@ function App() {
             status="good"
           />
           <SensorCard
-            title="Притисак"
+            title="Притисак Воде"
             value={sensorData.pressure}
             unit="бара"
             icon={<Gauge className="w-5 h-5" />}
@@ -673,6 +1041,10 @@ function App() {
                 data={sensorData} 
                 onTargetChange={handleTargetTemperatureChange}
                 onFanSpeedChange={handleFanSpeedChange}
+                schedules={irrigationSchedules}
+                onScheduleAdd={handleScheduleAdd}
+                onScheduleUpdate={handleScheduleUpdate}
+                onScheduleDelete={handleScheduleDelete}
               />
             ) : (
               <ManualControls 
@@ -689,8 +1061,11 @@ function App() {
 
         {/* Footer */}
         <div className="text-center text-white/50 text-sm">
-          <p>ESP32 Систем за Наводњавање в3.1 | WebSocket: Порт 81 | MQTT: localhost:1883</p>
+          <p>МОЈА БАШТА в3.2 | WebSocket: Порт 81 | MQTT: localhost:1883</p>
         </div>
+
+        {/* Back to Top Button */}
+        <BackToTopButton />
       </div>
 
       {/* CSS for slider */}
