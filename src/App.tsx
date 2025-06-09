@@ -573,7 +573,7 @@ const AutomaticControls: React.FC<{
                 <div>• Температурна регулација инкубатора: {data.targetIncubatorTemperature}°C ± 1°C</div>
                 <div>• Вентилатор: {data.fanSpeed}% брзине</div>
                 <div>• Влажност земљишта: Аутоматско наводњавање</div>
-                <div>• Ветар: Заштита при јачини > 15 km/h</div>
+                <div>• Ветар: Заштита при јачини {'>'} 15 km/h</div>
                 <div>• CO₂: Оптимизација за раст биљака</div>
                 <div>• Распоред: {schedules.filter(s => s.active).length} активних распореда</div>
               </div>
@@ -645,7 +645,7 @@ const ManualControls: React.FC<{
           </div>
           <div className="flex items-start gap-2">
             <div className="w-2 h-2 bg-red-400 rounded-full mt-1.5 flex-shrink-0"></div>
-            <span>Висока брзина ветра (>{data.windSpeed.toFixed(1)} km/h) може утицати на систем</span>
+            <span>Висока брзина ветра ({'>'}{data.windSpeed.toFixed(1)} km/h) може утицати на систем</span>
           </div>
         </div>
       </div>
