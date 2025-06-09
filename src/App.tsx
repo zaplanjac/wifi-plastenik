@@ -26,9 +26,13 @@ import {
   Trash2,
   Save,
   X,
-  Egg
+  Egg,
+  BookOpen,
+  Router
 } from 'lucide-react';
 import CalendarPage from './components/CalendarPage';
+import WiFiManagementPage from './components/WiFiManagementPage';
+import InstructionsPage from './components/InstructionsPage';
 
 interface SensorData {
   temperature: number;
@@ -59,7 +63,7 @@ interface IrrigationSchedule {
 }
 
 type OperatingMode = 'manual' | 'automatic';
-type CurrentPage = 'dashboard' | 'calendar';
+type CurrentPage = 'dashboard' | 'calendar' | 'wifi' | 'instructions';
 
 const ModeSwitch: React.FC<{ 
   mode: OperatingMode; 
@@ -569,7 +573,7 @@ const AutomaticControls: React.FC<{
                 <div>• Температурна регулација инкубатора: {data.targetIncubatorTemperature}°C ± 1°C</div>
                 <div>• Вентилатор: {data.fanSpeed}% брзине</div>
                 <div>• Влажност земљишта: Аутоматско наводњавање</div>
-                <div>• Ветар: Заштита при јачини &gt; 15 km/h</div>
+                <div>• Ветар: Заштита при јачини > 15 km/h</div>
                 <div>• CO₂: Оптимизација за раст биљака</div>
                 <div>• Распоред: {schedules.filter(s => s.active).length} активних распореда</div>
               </div>
@@ -641,7 +645,7 @@ const ManualControls: React.FC<{
           </div>
           <div className="flex items-start gap-2">
             <div className="w-2 h-2 bg-red-400 rounded-full mt-1.5 flex-shrink-0"></div>
-            <span>Висока брзина ветра (&gt;{data.windSpeed.toFixed(1)} km/h) може утицати на систем</span>
+            <span>Висока брзина ветра (>{data.windSpeed.toFixed(1)} km/h) може утицати на систем</span>
           </div>
         </div>
       </div>
@@ -751,10 +755,10 @@ const Navigation: React.FC<{
   return (
     <div className="flex justify-center mb-8">
       <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/20">
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap justify-center">
           <button
             onClick={() => onPageChange('dashboard')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+            className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all duration-300 ${
               currentPage === 'dashboard'
                 ? 'bg-white text-blue-900 shadow-lg'
                 : 'text-white hover:bg-white/10'
@@ -765,7 +769,7 @@ const Navigation: React.FC<{
           </button>
           <button
             onClick={() => onPageChange('calendar')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+            className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all duration-300 ${
               currentPage === 'calendar'
                 ? 'bg-white text-blue-900 shadow-lg'
                 : 'text-white hover:bg-white/10'
@@ -773,6 +777,28 @@ const Navigation: React.FC<{
           >
             <Calendar className="w-5 h-5" />
             Календар
+          </button>
+          <button
+            onClick={() => onPageChange('wifi')}
+            className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all duration-300 ${
+              currentPage === 'wifi'
+                ? 'bg-white text-blue-900 shadow-lg'
+                : 'text-white hover:bg-white/10'
+            }`}
+          >
+            <Router className="w-5 h-5" />
+            WiFi
+          </button>
+          <button
+            onClick={() => onPageChange('instructions')}
+            className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all duration-300 ${
+              currentPage === 'instructions'
+                ? 'bg-white text-blue-900 shadow-lg'
+                : 'text-white hover:bg-white/10'
+            }`}
+          >
+            <BookOpen className="w-5 h-5" />
+            Упутства
           </button>
         </div>
       </div>
@@ -970,30 +996,116 @@ function App() {
     }
   };
 
-  if (currentPage === 'calendar') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-800 p-4">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-3 mb-2">
-              <Leaf className="w-8 h-8 text-white" />
-              <h1 className="text-3xl font-bold text-white">МОЈА БАШТА</h1>
+  // Render different pages based on currentPage
+  const renderCurrentPage = () => {
+    switch (currentPage) {
+      case 'calendar':
+        return <CalendarPage />;
+      case 'wifi':
+        return <WiFiManagementPage />;
+      case 'instructions':
+        return <InstructionsPage />;
+      default:
+        return (
+          <>
+            {/* Mode Switch */}
+            <ModeSwitch mode={operatingMode} onModeChange={setOperatingMode} />
+
+            {/* Sensor Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
+              <SensorCard
+                title="Температура у Пластенику"
+                value={sensorData.temperature}
+                unit="°C"
+                icon={<Thermometer className="w-5 h-5" />}
+                status="good"
+              />
+              <SensorCard
+                title="Спољашња Температура"
+                value={sensorData.externalTemperature}
+                unit="°C"
+                icon={<ThermometerSun className="w-5 h-5" />}
+                status="good"
+              />
+              <SensorCard
+                title="Температура у Инкубатору Расада"
+                value={sensorData.incubatorTemperature}
+                unit="°C"
+                icon={<Egg className="w-5 h-5" />}
+                status={getSensorStatus('incubator', sensorData.incubatorTemperature)}
+              />
+              <SensorCard
+                title="Притисак Воде"
+                value={sensorData.pressure}
+                unit="бара"
+                icon={<Gauge className="w-5 h-5" />}
+                status={sensorData.pressure < 0.5 ? 'critical' : 'good'}
+              />
+              <SensorCard
+                title="Влажност Земљишта"
+                value={sensorData.soilMoisture}
+                unit="%"
+                icon={<Droplets className="w-5 h-5" />}
+                status={getSensorStatus('soil', sensorData.soilMoisture)}
+              />
+              <SensorCard
+                title="Брзина Ветра"
+                value={sensorData.windSpeed}
+                unit="km/h"
+                icon={<Wind className="w-5 h-5" />}
+                status={getSensorStatus('wind', sensorData.windSpeed)}
+              />
+              <SensorCard
+                title="Јачина Светлости"
+                value={sensorData.lightIntensity}
+                unit="%"
+                icon={<Sun className="w-5 h-5" />}
+                status={getSensorStatus('light', sensorData.lightIntensity)}
+              />
+              <SensorCard
+                title="CO₂ Засићење"
+                value={sensorData.co2Saturation}
+                unit="ppm"
+                icon={<Leaf className="w-5 h-5" />}
+                status={getSensorStatus('co2', sensorData.co2Saturation)}
+              />
             </div>
-          </div>
 
-          {/* Navigation */}
-          <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
+            {/* Mode-specific Controls */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+              <div className="lg:col-span-3">
+                {operatingMode === 'automatic' ? (
+                  <AutomaticControls 
+                    data={sensorData} 
+                    onTargetChange={handleTargetTemperatureChange}
+                    onIncubatorTargetChange={handleIncubatorTargetTemperatureChange}
+                    onFanSpeedChange={handleFanSpeedChange}
+                    schedules={irrigationSchedules}
+                    onScheduleAdd={handleScheduleAdd}
+                    onScheduleUpdate={handleScheduleUpdate}
+                    onScheduleDelete={handleScheduleDelete}
+                  />
+                ) : (
+                  <ManualControls 
+                    data={sensorData} 
+                    onValveToggle={toggleValve}
+                  />
+                )}
+              </div>
+              
+              <div className="lg:col-span-1">
+                <SystemStatus data={sensorData} />
+              </div>
+            </div>
 
-          {/* Calendar Page */}
-          <CalendarPage />
-
-          {/* Back to Top Button */}
-          <BackToTopButton />
-        </div>
-      </div>
-    );
-  }
+            {/* Footer */}
+            <div className="text-center text-white/50 text-sm">
+              <p>МОЈА БАШТА в3.2 | WebSocket: Порт 81 | MQTT: localhost:1883</p>
+            </div>
+          </>
+        );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-800 p-4">
@@ -1001,7 +1113,7 @@ function App() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <Droplets className="w-8 h-8 text-white" />
+            <Leaf className="w-8 h-8 text-white" />
             <h1 className="text-3xl font-bold text-white">МОЈА БАШТА</h1>
           </div>
         </div>
@@ -1009,100 +1121,8 @@ function App() {
         {/* Navigation */}
         <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
 
-        {/* Mode Switch */}
-        <ModeSwitch mode={operatingMode} onModeChange={setOperatingMode} />
-
-        {/* Sensor Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
-          <SensorCard
-            title="Температура у Пластенику"
-            value={sensorData.temperature}
-            unit="°C"
-            icon={<Thermometer className="w-5 h-5" />}
-            status="good"
-          />
-          <SensorCard
-            title="Спољашња Температура"
-            value={sensorData.externalTemperature}
-            unit="°C"
-            icon={<ThermometerSun className="w-5 h-5" />}
-            status="good"
-          />
-          <SensorCard
-            title="Температура у Инкубатору Расада"
-            value={sensorData.incubatorTemperature}
-            unit="°C"
-            icon={<Egg className="w-5 h-5" />}
-            status={getSensorStatus('incubator', sensorData.incubatorTemperature)}
-          />
-          <SensorCard
-            title="Притисак Воде"
-            value={sensorData.pressure}
-            unit="бара"
-            icon={<Gauge className="w-5 h-5" />}
-            status={sensorData.pressure < 0.5 ? 'critical' : 'good'}
-          />
-          <SensorCard
-            title="Влажност Земљишта"
-            value={sensorData.soilMoisture}
-            unit="%"
-            icon={<Droplets className="w-5 h-5" />}
-            status={getSensorStatus('soil', sensorData.soilMoisture)}
-          />
-          <SensorCard
-            title="Брзина Ветра"
-            value={sensorData.windSpeed}
-            unit="km/h"
-            icon={<Wind className="w-5 h-5" />}
-            status={getSensorStatus('wind', sensorData.windSpeed)}
-          />
-          <SensorCard
-            title="Јачина Светлости"
-            value={sensorData.lightIntensity}
-            unit="%"
-            icon={<Sun className="w-5 h-5" />}
-            status={getSensorStatus('light', sensorData.lightIntensity)}
-          />
-          <SensorCard
-            title="CO₂ Засићење"
-            value={sensorData.co2Saturation}
-            unit="ppm"
-            icon={<Leaf className="w-5 h-5" />}
-            status={getSensorStatus('co2', sensorData.co2Saturation)}
-          />
-        </div>
-
-        {/* Mode-specific Controls */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
-          <div className="lg:col-span-3">
-            {operatingMode === 'automatic' ? (
-              <AutomaticControls 
-                data={sensorData} 
-                onTargetChange={handleTargetTemperatureChange}
-                onIncubatorTargetChange={handleIncubatorTargetTemperatureChange}
-                onFanSpeedChange={handleFanSpeedChange}
-                schedules={irrigationSchedules}
-                onScheduleAdd={handleScheduleAdd}
-                onScheduleUpdate={handleScheduleUpdate}
-                onScheduleDelete={handleScheduleDelete}
-              />
-            ) : (
-              <ManualControls 
-                data={sensorData} 
-                onValveToggle={toggleValve}
-              />
-            )}
-          </div>
-          
-          <div className="lg:col-span-1">
-            <SystemStatus data={sensorData} />
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center text-white/50 text-sm">
-          <p>МОЈА БАШТА в3.2 | WebSocket: Порт 81 | MQTT: localhost:1883</p>
-        </div>
+        {/* Page Content */}
+        {renderCurrentPage()}
 
         {/* Back to Top Button */}
         <BackToTopButton />
