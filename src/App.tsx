@@ -20,7 +20,9 @@ import {
   ThermometerSun,
   Fan,
   ChevronUp,
-  Egg
+  Egg,
+  Wrench,
+  Bot
 } from 'lucide-react';
 import CalendarPage from './components/CalendarPage';
 import WiFiManagementPage from './components/WiFiManagementPage';
@@ -62,31 +64,139 @@ const ModeSwitch: React.FC<{
   onModeChange: (mode: OperatingMode) => void;
 }> = ({ mode, onModeChange }) => {
   return (
-    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-8">
-      <div className="flex items-center justify-center">
-        <div className="bg-white/20 rounded-full p-1 flex">
-          <button
-            onClick={() => onModeChange('manual')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
-              mode === 'manual'
-                ? 'bg-white text-blue-900 shadow-lg'
-                : 'text-white hover:bg-white/10'
-            }`}
-          >
-            <Settings className="w-5 h-5" />
-            Ручни Режим
-          </button>
-          <button
-            onClick={() => onModeChange('automatic')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
-              mode === 'automatic'
-                ? 'bg-white text-blue-900 shadow-lg'
-                : 'text-white hover:bg-white/10'
-            }`}
-          >
-            <Target className="w-5 h-5" />
-            Аутоматски Режим
-          </button>
+    <div className="relative mb-8">
+      {/* Background glow effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 via-blue-500/20 to-green-500/20 rounded-3xl blur-xl"></div>
+      
+      {/* Main container */}
+      <div className="relative bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10 shadow-2xl">
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent mb-2">
+            Режим Рада Система
+          </h2>
+          <p className="text-white/60 text-sm">Изаберите начин управљања вашим системом</p>
+        </div>
+        
+        <div className="flex items-center justify-center">
+          <div className="relative bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/20">
+            {/* Animated background slider */}
+            <div 
+              className={`absolute top-2 bottom-2 w-1/2 rounded-xl transition-all duration-500 ease-out ${
+                mode === 'manual' 
+                  ? 'left-2 bg-gradient-to-r from-orange-500 to-red-500 shadow-lg shadow-orange-500/25' 
+                  : 'left-1/2 bg-gradient-to-r from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/25'
+              }`}
+            ></div>
+            
+            <div className="relative flex">
+              {/* Manual Mode Button */}
+              <button
+                onClick={() => onModeChange('manual')}
+                className={`group relative flex items-center gap-3 px-8 py-4 rounded-xl font-semibold transition-all duration-500 transform ${
+                  mode === 'manual'
+                    ? 'text-white scale-105 z-10'
+                    : 'text-white/70 hover:text-white hover:scale-105'
+                }`}
+              >
+                {/* Icon with special effects */}
+                <div className={`relative transition-all duration-300 ${
+                  mode === 'manual' ? 'scale-110' : 'group-hover:scale-110'
+                }`}>
+                  {mode === 'manual' && (
+                    <div className="absolute inset-0 bg-white/30 rounded-full blur-md"></div>
+                  )}
+                  <div className="relative">
+                    <Wrench className="w-6 h-6" />
+                  </div>
+                </div>
+                
+                <div className="text-left">
+                  <div className={`transition-all duration-300 ${
+                    mode === 'manual' ? 'font-bold text-lg' : 'font-semibold group-hover:font-bold'
+                  }`}>
+                    Ручни Режим
+                  </div>
+                  <div className={`text-xs transition-all duration-300 ${
+                    mode === 'manual' ? 'text-white/90' : 'text-white/50 group-hover:text-white/70'
+                  }`}>
+                    Потпуна контрола
+                  </div>
+                </div>
+                
+                {/* Active indicator */}
+                {mode === 'manual' && (
+                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg animate-pulse"></div>
+                )}
+                
+                {/* Hover glow effect */}
+                <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-orange-500 to-red-500 blur-xl -z-10"></div>
+              </button>
+              
+              {/* Automatic Mode Button */}
+              <button
+                onClick={() => onModeChange('automatic')}
+                className={`group relative flex items-center gap-3 px-8 py-4 rounded-xl font-semibold transition-all duration-500 transform ${
+                  mode === 'automatic'
+                    ? 'text-white scale-105 z-10'
+                    : 'text-white/70 hover:text-white hover:scale-105'
+                }`}
+              >
+                {/* Icon with special effects */}
+                <div className={`relative transition-all duration-300 ${
+                  mode === 'automatic' ? 'scale-110' : 'group-hover:scale-110'
+                }`}>
+                  {mode === 'automatic' && (
+                    <div className="absolute inset-0 bg-white/30 rounded-full blur-md"></div>
+                  )}
+                  <div className="relative">
+                    <Bot className="w-6 h-6" />
+                  </div>
+                </div>
+                
+                <div className="text-left">
+                  <div className={`transition-all duration-300 ${
+                    mode === 'automatic' ? 'font-bold text-lg' : 'font-semibold group-hover:font-bold'
+                  }`}>
+                    Аутоматски Режим
+                  </div>
+                  <div className={`text-xs transition-all duration-300 ${
+                    mode === 'automatic' ? 'text-white/90' : 'text-white/50 group-hover:text-white/70'
+                  }`}>
+                    Паметно управљање
+                  </div>
+                </div>
+                
+                {/* Active indicator */}
+                {mode === 'automatic' && (
+                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg animate-pulse"></div>
+                )}
+                
+                {/* Hover glow effect */}
+                <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-blue-500 to-cyan-500 blur-xl -z-10"></div>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Mode Description */}
+        <div className="mt-6 text-center">
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-all duration-500 ${
+            mode === 'manual' 
+              ? 'bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 text-orange-200'
+              : 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 text-blue-200'
+          }`}>
+            {mode === 'manual' ? (
+              <>
+                <Settings className="w-4 h-4" />
+                <span>Ручно управљање свим функцијама система</span>
+              </>
+            ) : (
+              <>
+                <Target className="w-4 h-4" />
+                <span>Аутоматска оптимизација на основу сензора</span>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
