@@ -25,7 +25,8 @@ import {
   Edit,
   Trash2,
   Save,
-  X
+  X,
+  Egg
 } from 'lucide-react';
 import CalendarPage from './components/CalendarPage';
 
@@ -37,11 +38,13 @@ interface SensorData {
   lightIntensity: number;
   co2Saturation: number;
   externalTemperature: number;
+  incubatorTemperature: number;
   valves: { valve1: boolean; valve2: boolean };
   wifiConnected: boolean;
   mqttConnected: boolean;
   systemActive: boolean;
   targetTemperature: number;
+  targetIncubatorTemperature: number;
   fanSpeed: number;
   autoMode: boolean;
 }
@@ -141,7 +144,9 @@ const TemperatureControl: React.FC<{
   currentTemp: number; 
   targetTemp: number; 
   onTargetChange: (temp: number) => void;
-}> = ({ currentTemp, targetTemp, onTargetChange }) => {
+  title: string;
+  icon: React.ReactNode;
+}> = ({ currentTemp, targetTemp, onTargetChange, title, icon }) => {
   
   const getTemperatureStatus = () => {
     const diff = Math.abs(currentTemp - targetTemp);
@@ -155,8 +160,8 @@ const TemperatureControl: React.FC<{
   return (
     <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
       <div className="flex items-center gap-2 mb-4">
-        <Target className="w-5 h-5 text-white" />
-        <span className="text-white font-semibold">Контрола Температуре</span>
+        {icon}
+        <span className="text-white font-semibold">{title}</span>
       </div>
 
       <div className="space-y-4">
@@ -511,19 +516,30 @@ const ValveControl: React.FC<{
 const AutomaticControls: React.FC<{ 
   data: SensorData; 
   onTargetChange: (temp: number) => void;
+  onIncubatorTargetChange: (temp: number) => void;
   onFanSpeedChange: (speed: number) => void;
   schedules: IrrigationSchedule[];
   onScheduleAdd: (schedule: Omit<IrrigationSchedule, 'id'>) => void;
   onScheduleUpdate: (id: string, schedule: Partial<IrrigationSchedule>) => void;
   onScheduleDelete: (id: string) => void;
-}> = ({ data, onTargetChange, onFanSpeedChange, schedules, onScheduleAdd, onScheduleUpdate, onScheduleDelete }) => {
+}> = ({ data, onTargetChange, onIncubatorTargetChange, onFanSpeedChange, schedules, onScheduleAdd, onScheduleUpdate, onScheduleDelete }) => {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <TemperatureControl
           currentTemp={data.temperature}
           targetTemp={data.targetTemperature}
           onTargetChange={onTargetChange}
+          title="Контрола Температуре Пластеника"
+          icon={<Target className="w-5 h-5 text-white" />}
+        />
+        
+        <TemperatureControl
+          currentTemp={data.incubatorTemperature}
+          targetTemp={data.targetIncubatorTemperature}
+          onTargetChange={onIncubatorTargetChange}
+          title="Контрола Температуре Инкубатора"
+          icon={<Egg className="w-5 h-5 text-white" />}
         />
         
         <FanSpeedControl
@@ -549,17 +565,18 @@ const AutomaticControls: React.FC<{
             <div className="text-sm text-blue-200">
               <div className="font-medium mb-2">Активне аутоматске контроле:</div>
               <div className="space-y-1 text-xs">
-                <div>• Температурна регулација: {data.targetTemperature}°C ± 1°C</div>
+                <div>• Температурна регулација пластеника: {data.targetTemperature}°C ± 1°C</div>
+                <div>• Температурна регулација инкубатора: {data.targetIncubatorTemperature}°C ± 1°C</div>
                 <div>• Вентилатор: {data.fanSpeed}% брзине</div>
                 <div>• Влажност земљишта: Аутоматско наводњавање</div>
-                <div>• Ветар: Заштита при јачини &gt; 15 km/h</div>
+                <div>• Ветар: Заштита при јачини > 15 km/h</div>
                 <div>• CO₂: Оптимизација за раст биљака</div>
                 <div>• Распоред: {schedules.filter(s => s.active).length} активних распореда</div>
               </div>
             </div>
           </div>
           
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-3">
             <div className="text-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
               <div className="text-green-300 font-medium">Вентили</div>
               <div className="text-xs text-green-200">Аутоматски</div>
@@ -571,6 +588,10 @@ const AutomaticControls: React.FC<{
             <div className="text-center p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
               <div className="text-purple-300 font-medium">Вентилатор</div>
               <div className="text-xs text-purple-200">{data.fanSpeed}%</div>
+            </div>
+            <div className="text-center p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
+              <div className="text-orange-300 font-medium">Инкубатор</div>
+              <div className="text-xs text-orange-200">{data.targetIncubatorTemperature}°C</div>
             </div>
           </div>
         </div>
@@ -620,7 +641,7 @@ const ManualControls: React.FC<{
           </div>
           <div className="flex items-start gap-2">
             <div className="w-2 h-2 bg-red-400 rounded-full mt-1.5 flex-shrink-0"></div>
-            <span>Висока брзина ветра (&gt;{data.windSpeed.toFixed(1)} km/h) може утицати на систем</span>
+            <span>Висока брзина ветра (>{data.windSpeed.toFixed(1)} km/h) може утицати на систем</span>
           </div>
         </div>
       </div>
@@ -789,11 +810,13 @@ function App() {
     lightIntensity: 75,
     co2Saturation: 420,
     externalTemperature: 18.7,
+    incubatorTemperature: 25.5,
     valves: { valve1: false, valve2: true },
     wifiConnected: true,
     mqttConnected: true,
     systemActive: true,
     targetTemperature: 24.0,
+    targetIncubatorTemperature: 26.0,
     fanSpeed: 45,
     autoMode: false
   });
@@ -862,7 +885,8 @@ function App() {
         windSpeed: Math.max(0, Math.min(25, prev.windSpeed + (Math.random() - 0.5) * 5)),
         lightIntensity: Math.max(0, Math.min(100, prev.lightIntensity + (Math.random() - 0.5) * 20)),
         co2Saturation: Math.max(300, Math.min(600, prev.co2Saturation + (Math.random() - 0.5) * 50)),
-        externalTemperature: 18.7 + (Math.random() - 0.5) * 8
+        externalTemperature: 18.7 + (Math.random() - 0.5) * 8,
+        incubatorTemperature: 25.5 + (Math.random() - 0.5) * 6
       }));
     }, 3000);
 
@@ -885,6 +909,13 @@ function App() {
     setSensorData(prev => ({
       ...prev,
       targetTemperature: temp
+    }));
+  };
+
+  const handleIncubatorTargetTemperatureChange = (temp: number) => {
+    setSensorData(prev => ({
+      ...prev,
+      targetIncubatorTemperature: temp
     }));
   };
 
@@ -931,6 +962,9 @@ function App() {
         if (value < 30) return 'critical';
         if (value < 50) return 'warning';
         return 'good';
+      case 'incubator':
+        if (value < 20 || value > 35) return 'warning';
+        return 'good';
       default:
         return 'good';
     }
@@ -946,7 +980,6 @@ function App() {
               <Leaf className="w-8 h-8 text-white" />
               <h1 className="text-3xl font-bold text-white">МОЈА БАШТА</h1>
             </div>
-            <p className="text-white/70">Календар Биљака и Активности</p>
           </div>
 
           {/* Navigation */}
@@ -971,7 +1004,6 @@ function App() {
             <Droplets className="w-8 h-8 text-white" />
             <h1 className="text-3xl font-bold text-white">МОЈА БАШТА</h1>
           </div>
-          <p className="text-white/70">Напредна Контролна Табла за Климу и Наводњавање</p>
         </div>
 
         {/* Navigation */}
@@ -981,7 +1013,7 @@ function App() {
         <ModeSwitch mode={operatingMode} onModeChange={setOperatingMode} />
 
         {/* Sensor Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
           <SensorCard
             title="Температура у Пластенику"
             value={sensorData.temperature}
@@ -995,6 +1027,13 @@ function App() {
             unit="°C"
             icon={<ThermometerSun className="w-5 h-5" />}
             status="good"
+          />
+          <SensorCard
+            title="Температура у Инкубатору Расада"
+            value={sensorData.incubatorTemperature}
+            unit="°C"
+            icon={<Egg className="w-5 h-5" />}
+            status={getSensorStatus('incubator', sensorData.incubatorTemperature)}
           />
           <SensorCard
             title="Притисак Воде"
@@ -1040,6 +1079,7 @@ function App() {
               <AutomaticControls 
                 data={sensorData} 
                 onTargetChange={handleTargetTemperatureChange}
+                onIncubatorTargetChange={handleIncubatorTargetTemperatureChange}
                 onFanSpeedChange={handleFanSpeedChange}
                 schedules={irrigationSchedules}
                 onScheduleAdd={handleScheduleAdd}
