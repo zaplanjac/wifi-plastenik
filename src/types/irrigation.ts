@@ -24,9 +24,9 @@ export const DEFAULT_SOIL_MOISTURE_SETTINGS: SoilMoistureSettings = {
 export const DEFAULT_IRRIGATION_SCHEDULES: IrrigationSchedule[] = [
   {
     id: '1',
-    name: 'Јутарње заливање',
-    startTime: '06:00',
-    duration: 30,
+    name: 'NOĆNO ZALIVANJE',
+    startTime: '02:00',
+    duration: 180,
     days: ['monday', 'wednesday', 'friday'],
     active: true
   },
